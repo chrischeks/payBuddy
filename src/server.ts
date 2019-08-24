@@ -1,5 +1,4 @@
 import * as bodyParser from "body-parser";
-// import * as cookieParser from "cookie-parser";
 import * as express from "express";
 import * as logger from "morgan";
 import * as path from "path";
@@ -7,30 +6,20 @@ import * as dotenv from "dotenv";
 import * as cors from "cors";
 import errorHandler = require("errorhandler");
 import methodOverride = require("method-override");
-import mongoose = require("mongoose"); //import mongoose
-import encrypt = require('mongoose-encryption');
 import * as compression from "compression"
 
 dotenv.config();
 
-
-
 //routes
-import { AuthorController } from "./controllers/authorController";
-import { BookController } from './controllers/bookController';
+
 import { UssdController } from './controllers/ussdController';
 
 
 //interfaces
- import { IAuthor } from "./interfaces/authorInterface";
 
 //models
-import { IAuthorModel } from './models/authorModel';
-import { IBookModel } from './models/bookModel';
 
 //schemas
-import { AuthorSchema } from './schemas/authorSchema';
-import { BookSchema } from './schemas/bookSchema';
 
 import chalk = require('chalk');
 import { info } from "console";
@@ -44,7 +33,6 @@ import { info } from "console";
 export class Server {
 
   public app: express.Application;
-  private connection: mongoose.Connection;
   /**
    * Bootstrap the application.
    *
@@ -74,7 +62,6 @@ export class Server {
     //add routes
     this.routes();
 
-    this.runners(this.connection);
   }
 
   /**
@@ -84,7 +71,6 @@ export class Server {
    * @method config
    */
   public config() {
-    const MONGODB_CONNECTION: string = `mongodb://${process.env.MLAB_NAME}:${process.env.MLAB_PASSWORD}@ds239967.mlab.com:39967/file-keeper`;
     //add static paths
     this.app.use(express.static(path.join(__dirname, "public")));
 
@@ -111,22 +97,10 @@ export class Server {
     this.app.use(compression())
 
     //use q promises
-    global.Promise = require("q").Promise;
-    mongoose.Promise = global.Promise;
 
     //connect to mongoose
-    mongoose.set('useCreateIndex', true);
-    mongoose.set('useNewUrlParser', true)
-    let connection: mongoose.Connection = mongoose.createConnection(MONGODB_CONNECTION);
-    this.connection = connection;
-
-    //mongoose encryption
-    // var encKey = process.env.db_encryption_key;
-    // var sigKey = process.env.db_signing_key;
-    // mongoose.plugin(encrypt, { encryptionKey: encKey, signingKey: sigKey, encryptedFields: ['secret'] });
    
-    this.app.locals.author = connection.model<IAuthorModel>("Author", AuthorSchema);
-    this.app.locals.book = connection.model<IBookModel>("Book", BookSchema)
+   
 
     // catch 404 and forward to error handler
     this.app.use(function(err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -152,11 +126,6 @@ export class Server {
     var swaggerUi = require('swagger-ui-express'),
     swaggerDocument = require('../swagger.json');
 
-    console.log(chalk.default.yellow.bgBlack.bold("Loading author controller routes"));
-    new AuthorController().loadRoutes('/author',router);
-
-    console.log(chalk.default.yellow.bgBlack.bold("Loading book controller routes"));
-    new BookController().loadRoutes('/book',router);
 
     console.log(chalk.default.yellow.bgBlack.bold("Loading ussd controller routes"));
     new UssdController().loadRoutes('*',router);
@@ -172,8 +141,4 @@ export class Server {
     });
   }
   
-
-  private runners(connection: mongoose.Connection): any {
-    //register and fire scheduled job runner classes
-  }
 }
