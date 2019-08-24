@@ -145,8 +145,8 @@ export class ussdMenuService {
     }
 
 
-    payLoanWithQuicktellerState(menu) {
-        menu.state('payWithQuickteller', {
+    async payLoanWithQuicktellerState(menu) {
+        menu.state('payLoanWithQuickteller', {
             run: () => {
                 payWithQuickTeller().then(res => {
                     menu.end('responds for pay with quickteller')
@@ -162,12 +162,11 @@ export class ussdMenuService {
 
 
 
-    payLoanWithPhoneOrCardState(menu) {
+    async payLoanWithPhoneOrCardState(menu) {
         menu.state('payLoanWithPhone/Card', {
             run: () => {
-                menu.con(
-                    '\n1. Get Bank List, Display And Select An Option' +
-                    '\n2. Add new card'
+                menu.con(`${this.getBankList()}
+                    \n5. Add new card`
                 )
             },
             next: {
@@ -184,9 +183,9 @@ export class ussdMenuService {
             run: () => {
                 menu.con(
                     '\n1. Pay Loan With Phone/Card' +
-                    '\n2. PAY WITH QUICKTELLER' +
-                    '\n3. PAY WITH ATM' +
-                    '\n4. PAY WITH CASH'
+                    '\n2. Pay with Qucikteller' +
+                    '\n3. Pay with ATM' +
+                    '\n4. Pay with Cash'
                 )
             },
 
@@ -300,8 +299,8 @@ export class ussdMenuService {
 
     async getBankListState(menu) {
         menu.state('getBankList', {
-            run: async () => {
-                menu.con(`${await this.getBankList()}
+            run: () => {
+                menu.con(`${this.getBankList()}
                     \n5. Add new card`
                 )
             },
