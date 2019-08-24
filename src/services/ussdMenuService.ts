@@ -90,9 +90,9 @@ export class ussdMenuService {
 
             next: {
                 '1': 'confirm',
-                "2": "showAndSelectLoanOffer",
+                "2": 'requestLoan',
                 '3': 'getBankList',
-                "4": "exit"
+                "4": 'exit'
             }
         })
 

@@ -134,7 +134,7 @@ export class Server {
 
     //use router middleware
     this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-    this.app.use('/v1',router);
+    this.app.use('/',router);
 
     this.app.all('*', (req, res)=> {
       return res.status(404).json({ status: 404, error: 'not found' });
