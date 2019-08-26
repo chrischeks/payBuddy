@@ -299,8 +299,8 @@ export class ussdMenuService {
 
     async getBankListState(menu) {
         menu.state('getBankList', {
-            run: () => {
-                menu.con(`${this.getBankList()}
+            run: async () => {
+                menu.con(`${await this.getBankList()}
                     \n5. Add new card`
                 )
             },
