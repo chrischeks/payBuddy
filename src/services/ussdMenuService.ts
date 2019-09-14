@@ -2,12 +2,15 @@
 import { NextFunction, Request, Response } from "express";
 
 const UssdMenu = require('ussd-menu-builder');
+let bankDetails = {}
+
 
 
 export class ussdMenuService {
-
+    // loanAmount = "#0";
+    // bank = "";
     async ussdMenu(req: Request, res: Response, next: NextFunction) {
-
+        
         let menu = new UssdMenu();
 
         this.runMenu(menu, req, res)
@@ -34,6 +37,17 @@ export class ussdMenuService {
 
     }
 
+     // Registering USSD handler with Express
+
+    //     let args = {
+    //         phoneNumber: req.body.phoneNumber,
+    //         sessionId: req.body.sessionId,
+    //         serviceCode: req.body.serviceCode,
+    //         text: req.body.text
+    //     };
+    //     menu.run(args, resMsg => {
+    //         res.send(resMsg);
+    //     });
 
 
     async runMenu(menu, req, res){
@@ -160,19 +174,16 @@ export class ussdMenuService {
 
     }
 
-
-
     async payLoanWithPhoneOrCardState(menu) {
         menu.state('payLoanWithPhone/Card', {
-            run: () => {
-                menu.con(`${this.getBankList()}
-                    \n5. Add new card`
+            run: async() => {
+                menu.con(`${await this.getBankList()}`
                 )
             },
             next: {
 
-                '1': 'getBankList',
-                '2': 'addNewCard'
+                '*[1-4]': 'confirmLoan',
+                '5': 'addNewCard'
             }
         })
     }
@@ -181,7 +192,7 @@ export class ussdMenuService {
     async payLoanState(menu) {
         menu.state('payLoan', {
             run: () => {
-                menu.con(
+                menu.con('Select an option \n' +
                     '\n1. Pay Loan With Phone/Card' +
                     '\n2. Pay with Qucikteller' +
                     '\n3. Pay with ATM' +
@@ -203,7 +214,7 @@ export class ussdMenuService {
         menu.state('sendOTP&Validate', {
             run: () => {
                 sendOTPAndValidate().then(
-                    menu.end('Here is the response to send OTP & Validate')
+                    menu.end('Sms sent to mobile')
                 )
 
             }
@@ -259,7 +270,11 @@ export class ussdMenuService {
     async confirmState(menu) {
         menu.state('confirm', {
             run: () => {
-                menu.con('\n1. Confirm Amount & bank')
+                
+                
+                menu.con(
+                    `Amount: ${bankDetails['amount']}, Bank: ${bankDetails['bank']}
+                    \n1. Confirm Amount & bank`)
             },
 
             next: { '1': 'confirmAmount&Bank' }
@@ -280,7 +295,8 @@ export class ussdMenuService {
     async confirmLoanState(menu) {
         menu.state('confirmLoan', {
             run: () => {
-                menu.con('Confirm your loan details' +
+                bankDetails['bank']= this.getSelectedBank(menu.val) || "UBA"
+                menu.con('Select an option \n' +
                     '\n1. Confirm' +
                     '\n2. Change Amount' +
                     '\n3. Change Card' +
@@ -298,11 +314,12 @@ export class ussdMenuService {
     }
 
     async getBankListState(menu) {
+     
         menu.state('getBankList', {
             run: async () => {
-                menu.con(`${await this.getBankList()}
-                    \n5. Add new card`
-                )
+               bankDetails['amount']= this.getSelectedOffer(menu.val) || "#5,000"
+                menu.con(await this.getBankList()
+                                    )
             },
 
             next: {
@@ -327,7 +344,7 @@ export class ussdMenuService {
     async loanState(menu) {
         menu.state('loans', {
             run: () => {
-                menu.con(
+                menu.con('Select an option \n' +
                     '\n1. Request Loan' +
                     '\n2. Pay Loan' +
                     '\n3. Check Loan Balance' +
@@ -354,7 +371,7 @@ export class ussdMenuService {
     async startState(menu) {
         menu.startState({
             run: () => {
-                menu.con('Welcome to payBuddy' +
+                menu.con('Welcome to payBuddy \n' +
                     '\n1. Loans' +
                     '\n2. Savings' +
                     '\n3. Info' +
@@ -374,19 +391,49 @@ export class ussdMenuService {
 
 
     async getBankList() {
-        return `select an option
-        \n1. Access Bank
-        \n2. UBA
-        \n3. First Bank
-        \n4. GT Bank  `
+        let apiResponse= ['1. Access Bank ', '2. UBA', '3. First Bank', '4. GT Bank']
+        let bank = "Select an option \n";
+        for (let response of apiResponse){
+            bank+='\n'+response
+            if(response == apiResponse[apiResponse.length-1]){
+                bank += '\n'+ `${apiResponse.length + 1}. Add new card`
+            }
+        }
+         return bank
+        
     }
 
+    getSelectedBank(value): string{
+        let apiResponse= ['1. Access Bank ', '2. UBA', '3. First Bank', '4. GT Bank']
+        let bank = ""
+        apiResponse.map((item)=>{
+            if(item.substring(0,1) ==value){
+                bank = item.substring(3)
+            }
+            
+        })
+        return bank
+    }
 
+   
     async showLoanOffer() {
-        return `Select an offer 
-                \n1. #5,000 
-                \n2. #10,000  
-                \n3. #20,000             
-                \n4. #50,000  `
+       let apiResponse= ['1. #5,000', '2. #10,000', '3. #20,000', '4. #50,000']
+       let offer = `Select an offer \n`
+       for (let response of apiResponse){
+           offer+="\n"+response
+       }
+        return offer
+    }
+
+    getSelectedOffer(value): string{
+        let apiResponse= ['1. #5,000', '2. #10,000', '3. #20,000', '4. #50,000']
+        let offer = ""
+        apiResponse.map((item)=>{
+            if(item.substring(0,1) ==value){
+                offer = item.substring(3)
+            }
+            
+        })
+        return offer
     }
 }
