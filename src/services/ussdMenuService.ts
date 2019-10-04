@@ -371,7 +371,7 @@ export class ussdMenuService {
     async startState(menu) {
         menu.startState({
             run: () => {
-                menu.con('Welcome to payBuddy \n' +
+                menu.con('Welcome to Futureview \n' +
                     '\n1. Loans' +
                     '\n2. Savings' +
                     '\n3. Info' +
